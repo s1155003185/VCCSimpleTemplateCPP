@@ -1,4 +1,4 @@
-# VCCProjectSimpleTemplateCPPComplex
+# VCCProjectSimpleTemplateCPP
 ## Versioning Common Codebase Project / Versioning Coding Cooperation Project
 
 ## Assumption

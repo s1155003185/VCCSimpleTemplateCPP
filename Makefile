@@ -15,7 +15,7 @@
 # Note: files in .vscode is used for F5 only. if need to build Release vesrion, please use "make release"
 
 # Field to change:
-# PROJECT_NAME, DLL_PROJ_NAME, EXE_PROJ_NAME: project name
+# PROJ_NAME, PROJ_NAME_DLL, PROJ_NAME_EXE: project name
 # DEBUG_FLAGS, RELEASE_FLAGS, DEBUG_COMPILE_OPTIONS, RELEASE_COMPILE_OPTIONS, GTEST_COMPILE_OPTIONS: flag for debug and release
 # LFLAGS: library that not in the project, need to be handled in if case, as different platform has different paths 
 # EXCLUDE_FOLDER: igore that folder when compile
@@ -27,20 +27,32 @@
 #------------------------------------------------------------------------------------------------------#
 #------------------------------------------ Customize Begin  ------------------------------------------#
 #------------------------------------------------------------------------------------------------------#
-# <vcc:property action:"ALERT">
+# <vcc:name sync="ALERT">
+#----------------------------------#
+#---------- Project Name ----------#
+#----------------------------------#
+PROJ_NAME := Sample
+PROJ_NAME_DLL := lib$(PROJ_NAME)
+PROJ_NAME_EXE := $(PROJ_NAME)
+PROJ_NAME_GTEST := unittest
+# </vcc:name>
+# <vcc:property sync="ALERT">
 #----------------------------------#
 #---------- Project Info ----------#
 #----------------------------------#
-PROJECT_NAME := Sample
-DLL_PROJ_NAME := lib$(PROJECT_NAME)
-EXE_PROJ_NAME := $(PROJECT_NAME)
 # gtest
-GTEST_PROJECT_NAME := unittest
-GTEST_FOLDER := unittest
-
+GTEST_FOLDER := $(PROJ_NAME_GTEST)
+ifneq ($(PROJ_NAME_EXE),)
 EXE_MAIN_CPP_FILES := main.cpp
+else
+endif
+ifneq ($(PROJ_NAME_DLL),)
 DLL_MAIN_HPP_FILES := DllFunctions.h 
 DLL_MAIN_CPP_FILES := DllEntryPoint.cpp DllFunctions.cpp
+else
+DLL_MAIN_HPP_FILES :=
+DLL_MAIN_CPP_FILES :=
+endif
 #----------------------------------#
 #---------- Compile Info ----------#
 #----------------------------------#
@@ -67,8 +79,13 @@ INC := include
 SRC := src
 LIB := lib
 LFLAGS :=
+ifeq ($(OS),Windows_NT)
+DEBUG_FOLDER := bin\Debug
+RELEASE_FOLDER := bin\Release
+else
 DEBUG_FOLDER := bin/Debug
 RELEASE_FOLDER := bin/Release
+endif
 
 # exclude folder
 ifeq ($(OS),Windows_NT)
@@ -122,9 +139,9 @@ ifeq ($(OS),Windows_NT)
 #----------------------------------#
 #----------- Win Version-----------#
 #----------------------------------#
-MAIN_EXE := $(EXE_PROJ_NAME).exe
-MAIN_DLL := $(DLL_PROJ_NAME).dll
-GTESTMAIN := $(GTEST_PROJECT_NAME).exe
+MAIN_EXE := $(PROJ_NAME_EXE).exe
+MAIN_DLL := $(PROJ_NAME_DLL).dll
+GTESTMAIN := $(PROJ_NAME_GTEST).exe
 
 # All Sub Directory - Source need *.cpp instead of directory
 # g++ param
@@ -157,17 +174,18 @@ INCDIRS = -I$(INC) $(INCDIRS_SUB)
 #LFLAGS :=
 
 # Command
-RM			:= del /q /f
-RMDIR		:= rmdir /s /q
-MKDIR		:= mkdir
+RM := del /q /f
+RMDIR := rmdir /s /q
+MKDIR := mkdir
+CP := xcopy
 
 else
 #----------------------------------#
 #---------- Linus Version----------#
 #----------------------------------#
-MAIN_EXE := $(EXE_PROJ_NAME)
-MAIN_DLL := $(DLL_PROJ_NAME).so
-GTESTMAIN := $(GTEST_PROJECT_NAME)
+MAIN_EXE := $(PROJ_NAME_EXE)
+MAIN_DLL := $(PROJ_NAME_DLL).so
+GTESTMAIN := $(PROJ_NAME_GTEST)
 
 # All Sub Directory - Source need *.cpp instead of directory
 # g++ param
@@ -205,6 +223,7 @@ INCDIRS = $(INCDIRS_SUB)
 RM := rm -f
 RMDIR := rm -rf
 MKDIR := mkdir -p
+CP := cp -a
 endif
 
 ALL_PROJECT_O_FILES_EXE := $(ALL_PROJECT_CPP_FILES_EXE:.cpp=.o)
@@ -214,14 +233,13 @@ GTEST_O_FILES := $(GTEST_CPP_FILES:.cpp=.o)
 #------------------------------------------------------------------------------------------------------#
 #------------------------------------------ Customize Begin  ------------------------------------------#
 #------------------------------------------------------------------------------------------------------#
-# <vcc:property action:"ALERT">
-
+# <vcc:make sync="ALERT">
 #----------------------------------#
 #-------------- MAIN --------------#
 #----------------------------------#
-all: debug
+all: release
 
-# </vcc:property>
+# </vcc:make>
 #------------------------------------------------------------------------------------------------------#
 #------------------------------------------- Customize End  -------------------------------------------#
 #------------------------------------------------------------------------------------------------------#
@@ -230,21 +248,27 @@ all: debug
 #------------- Overall-------------#
 #----------------------------------#
 debug:
-ifneq ($(DLL_PROJ_NAME),)
+	$(MAKE) create_debug_folder
+	$(MAKE) copy_debug_lib
+ifneq ($(PROJ_NAME_DLL),)
 	$(MAKE) debug_dll
 endif
-ifneq ($(EXE_PROJ_NAME),)
+ifneq ($(PROJ_NAME_EXE),)
 	$(MAKE) debug_exe
 endif
+ifneq ($(PROJ_NAME_GTEST),)
 	$(MAKE) gtest
+endif
 	@echo Build Debug Complete!
 
 release:
+	$(MAKE) create_release_folder
 	$(MAKE) clean_release
-ifneq ($(DLL_PROJ_NAME),)
+	$(MAKE) copy_release_lib
+ifneq ($(PROJ_NAME_DLL),)
 	$(MAKE) release_dll
 endif
-ifneq ($(EXE_PROJ_NAME),)
+ifneq ($(PROJ_NAME_EXE),)
 	$(MAKE) release_exe
 endif
 	@echo Build Release Complete!
@@ -315,6 +339,49 @@ release_exe:
 	$(LFLAGS) \
 	-o $(RELEASE_FOLDER)/$(MAIN_EXE)
 	@echo Build RELEASE EXE Complete
+
+#----------------------------------#
+#------------- TOOLS  -------------#
+#----------------------------------#
+create_debug_folder:
+ifeq ($(OS),Windows_NT)
+ifeq ($(wildcard $(DEBUG_FOLDER)),)
+	$(MKDIR) "$(DEBUG_FOLDER)"
+endif
+else
+	$(MKDIR) "$(DEBUG_FOLDER)"
+endif
+
+create_release_folder:
+ifeq ($(OS),Windows_NT)
+ifeq ($(wildcard $(RELEASE_FOLDER)),)
+	$(MKDIR) "$(RELEASE_FOLDER)"
+endif
+else
+	$(MKDIR) "$(RELEASE_FOLDER)"
+endif
+
+copy_debug_lib:
+ifeq ($(OS),Windows_NT)
+ifeq ($(wildcard $(LIB)),)
+	$(MKDIR) "$(LIB)"
+endif
+	$(CP) "$(LIB)"  "$(DEBUG_FOLDER)" /E /H /C /I /D
+else
+	$(MKDIR) "$(LIB)"
+	$(CP) "$(LIB)/."  "$(DEBUG_FOLDER)"
+endif
+
+copy_release_lib:
+ifeq ($(OS),Windows_NT)
+ifeq ($(wildcard $(LIB)),)
+	$(MKDIR) "$(LIB)"
+endif
+	$(CP) "$(LIB)" "$(RELEASE_FOLDER)" /E /H /C /I /D
+else
+	$(MKDIR) "$(LIB)"
+	$(CP) "$(LIB)/."  "$(RELEASE_FOLDER)"
+endif
 
 #----------------------------------#
 #------------- Clean  -------------#

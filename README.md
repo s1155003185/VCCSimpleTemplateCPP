@@ -13,6 +13,13 @@ VCCProjectGeneratorVSCodeExtension (https://github.com/s1155003185/VCCProjectGen
 3. make
 4. gtest
 
+After download the project, please create folders following folders. Otherwise "make" will throw exception as directory not found.
+Note: Git will not upload empty folder as git response.
+    bin/Debug
+    bin/Release
+    lib
+
+
 ## Build C++ project
 Follow the instruction listed in Makefile
 

@@ -64,6 +64,9 @@ make -j4
 8. go to googletest/googlemock/include
 9. copy gmock to C:\msys64\mingw64\include
 
+## Contact
+X(Twitter) @VCCProject
+
 ## Release Log
 
 ### 2024-05-05 Versioning Common Codebase Project Generator Release

@@ -25,6 +25,16 @@
 # to add new gtest, follow unittest
 # change project name for DLL project in dll_test.cpp
 
+# Execute
+# make -j10
+# => same as make release 
+# make release -j10
+# => compile to bin/Release
+# make debug -j10
+# => compile to bin/Debug
+# make unittest -j10
+# => compile gtest only
+
 #------------------------------------------------------------------------------------------------------#
 #------------------------------------------ Customize Begin  ------------------------------------------#
 #------------------------------------------------------------------------------------------------------#
@@ -316,6 +326,12 @@ ifneq ($(PROJ_NAME_EXE),)
 	$(MAKE) compile_debug_exe
 endif
 	@echo Build Debug EXE Complete!
+
+unittest: $(GTESTMAIN)
+	$(MAKE) create_debug_folder
+	$(MAKE) copy_debug_lib
+	$(MAKE) gtest
+	@echo Build Unittest Complete!
 
 release:
 	$(MAKE) create_release_folder

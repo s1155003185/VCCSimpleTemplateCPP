@@ -69,6 +69,8 @@ X(Twitter) @VCCProject
 
 ## Release Log
 
+### 2024-07-07 Update Makefile to create .dylib for Mac M chip instead of .so
+
 ### 2024-05-06 Update Makefile to fix unittest name
 
 ### 2024-05-05 Versioning Common Codebase Project Generator Release

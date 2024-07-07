@@ -200,8 +200,15 @@ else
 #----------------------------------#
 #---------- Linus Version----------#
 #----------------------------------#
+
+UNAME := $(shell uname -m)
+# Darwin = MacOS: only allow .dylib
 MAIN_EXE := $(PROJ_NAME_EXE)
-MAIN_DLL := $(PROJ_NAME_DLL).so
+ifeq ($(UNAME),arm64)
+	MAIN_DLL := $(PROJ_NAME_DLL).dylib
+else
+	MAIN_DLL := $(PROJ_NAME_DLL).so
+endif
 GTESTMAIN := $(PROJ_NAME_GTEST)
 
 # All Sub Directory - Source need *.cpp instead of directory

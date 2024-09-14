@@ -70,6 +70,8 @@ TEST(DllTest, LoadDll) {
 
     #ifdef _WIN32
     dllName += L".dll";
+    #elif __aarch64__
+    dllName = L"bin/Debug/" + dllName + L".dylib";
     #else
     dllName = L"bin/Debug/" + dllName + L".so";
     #endif

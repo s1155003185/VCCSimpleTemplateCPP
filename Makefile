@@ -15,11 +15,19 @@
 # Note: files in .vscode is used for F5 only. if need to build Release vesrion, please use "make release"
 
 # Field to change:
+#----------------------------------#
+#---------- Project Name ----------#
+#----------------------------------#
 # PROJ_NAME, PROJ_NAME_DLL, PROJ_NAME_EXE: project name
 # DEBUG_FLAGS, RELEASE_FLAGS, DEBUG_COMPILE_OPTIONS, RELEASE_COMPILE_OPTIONS, GTEST_COMPILE_OPTIONS: flag for debug and release
 # LFLAGS: library that not in the project, need to be handled in if case, as different platform has different paths 
 # EXCLUDE_FOLDER: igore that folder when compile
 # if having vcc.json, please also ensure PROJ_NAME, PROJ_NAME_DLL, PROJ_NAME_EXE are the same.
+
+#----------------------------------#
+#---------- Export ----------------#
+#----------------------------------#
+# EXPORT_DLL_DIR, EXPORT_EXE_DIR, EXPORT_EXTERNAL_LIB: Export path for dll and exe after building Release.
 
 # Gtest
 # to add new gtest, follow unittest
@@ -47,6 +55,20 @@ PROJ_NAME_DLL := lib$(PROJ_NAME)
 PROJ_NAME_EXE := $(PROJ_NAME)
 IS_EXCLUDE_UNITTEST := N
 # </vcc:name>
+# <vcc:export sync="ALERT">
+#----------------------------------#
+#---------- Export ----------------#
+#----------------------------------#
+ifeq ($(OS),Windows_NT)
+EXPORT_DLL_DIR :=
+EXPORT_EXE_DIR :=
+EXPORT_EXTERNAL_LIB :=
+else
+EXPORT_DLL_DIR :=
+EXPORT_EXE_DIR :=
+EXPORT_EXTERNAL_LIB :=
+endif
+# </vcc:export>
 # <vcc:property sync="ALERT">
 #----------------------------------#
 #---------- Project Info ----------#
@@ -271,6 +293,8 @@ all: release
 #----------------------------------#
 #------------- Overall-------------#
 #----------------------------------#
+.PHONY: unittest gtest
+
 debug:
 	$(MAKE) create_debug_folder
 	$(MAKE) copy_debug_lib
@@ -334,7 +358,7 @@ ifneq ($(PROJ_NAME_EXE),)
 endif
 	@echo Build Debug EXE Complete!
 
-unittest: $(GTESTMAIN)
+unittest:
 	$(MAKE) create_debug_folder
 	$(MAKE) copy_debug_lib
 	$(MAKE) gtest
@@ -351,6 +375,15 @@ ifneq ($(PROJ_NAME_EXE),)
 	$(MAKE) compile_release_exe
 endif
 	@echo Build Release Complete!
+ifneq ($(EXPORT_DLL_DIR),)
+	$(MAKE) export_release_dll
+endif
+ifneq ($(EXPORT_EXE_DIR),)
+	$(MAKE) export_release_exe
+endif
+ifneq ($(EXPORT_EXTERNAL_LIB),)
+	$(MAKE) export_release_external_lib
+endif
 
 release_dll:
 	$(MAKE) create_release_folder
@@ -360,6 +393,12 @@ ifneq ($(PROJ_NAME_DLL),)
 	$(MAKE) compile_release_dll
 endif
 	@echo Build Release DLL Complete!
+ifneq ($(EXPORT_DLL_DIR),)
+	$(MAKE) export_release_dll
+endif
+ifneq ($(EXPORT_EXTERNAL_LIB),)
+	$(MAKE) export_release_external_lib
+endif
 
 release_exe:
 	$(MAKE) create_release_folder
@@ -369,6 +408,12 @@ ifneq ($(PROJ_NAME_EXE),)
 	$(MAKE) compile_release_exe
 endif
 	@echo Build Release EXE Complete!
+ifneq ($(EXPORT_EXE_DIR),)
+	$(MAKE) export_release_exe
+endif
+ifneq ($(EXPORT_EXTERNAL_LIB),)
+	$(MAKE) export_release_external_lib
+endif
 
 #----------------------------------#
 #-------------- DEBUG--------------#
@@ -478,6 +523,38 @@ endif
 else
 	$(MKDIR) "$(LIB)"
 	$(CP) "$(LIB)/."  "$(RELEASE_FOLDER)"
+endif
+
+#----------------------------------#
+#------------- Export -------------#
+#----------------------------------#
+.PHONY: export_release_dll export_release_exe export_release_external_lib
+
+export_release_dll:
+ifeq ($(OS),Windows_NT)
+	$(foreach dir,$(EXPORT_DLL_DIR), $(if $(wildcard $(dir)),, $(MKDIR) "$(dir)"))
+	$(foreach dir,$(EXPORT_DLL_DIR), $(CP) "$(RELEASE_FOLDER)\\$(MAIN_DLL)" "$(dir)" /Y /I)
+else
+	$(foreach dir,$(EXPORT_DLL_DIR), $(MKDIR) "$(dir)")
+	$(foreach dir,$(EXPORT_DLL_DIR), $(CP) "$(RELEASE_FOLDER)/$(MAIN_DLL)" "$(dir)")
+endif
+
+export_release_exe: 
+ifeq ($(OS),Windows_NT)
+	$(foreach dir,$(EXPORT_EXE_DIR), $(if $(wildcard $(dir)),, $(MKDIR) "$(dir)"))
+	$(foreach dir,$(EXPORT_EXE_DIR), $(CP) "$(RELEASE_FOLDER)\\$(MAIN_EXE)" "$(dir)" /Y /I)
+else
+	$(foreach dir,$(EXPORT_EXE_DIR), $(MKDIR) "$(dir)")
+	$(foreach dir,$(EXPORT_EXE_DIR), $(CP) "$(RELEASE_FOLDER)/$(MAIN_EXE)" "$(dir)")
+endif
+
+export_release_external_lib:
+ifeq ($(OS),Windows_NT)
+	$(foreach dir,$(EXPORT_EXE_DIR), $(if $(wildcard $(dir)),, $(MKDIR) "$(dir)"))
+	$(foreach dir,$(EXPORT_EXE_DIR), $(CP) "$(LIB)\\*.*" "$(dir)" /Y /I)
+else
+	$(foreach dir,$(EXPORT_EXE_DIR), $(MKDIR) "$(dir)")
+	$(foreach dir,$(EXPORT_EXE_DIR), $(CP) "$(LIB)/." "$(dir)")
 endif
 
 #----------------------------------#

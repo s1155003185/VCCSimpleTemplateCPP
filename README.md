@@ -69,6 +69,8 @@ X(Twitter) @VCCProject
 
 ## Release Log
 
+### 2025-08-03 Update Makefile to c++23
+
 ### 2024-09-17 Update Makefile to to copy dll and exe after make release
 
 ### 2024-07-07 Update Makefile to create .dylib for Mac M chip instead of .so
